@@ -1,0 +1,32 @@
+[
+    {
+        "Timestamp": "2026-09-13 21:25:32",
+        "URL": "https://en.wikipedia.org/wiki/Main_Page",
+        "Title": "Wikipedia, the free encyclopedia",
+        "Status Code": 200,
+        "Status": "Success",
+        "AI Summary": "",
+        "Sentiment": "",
+        "Keywords": ""
+    },
+    {
+        "Timestamp": "2026-09-13 21:25:37",
+        "URL": "https://www.python.org",
+        "Title": "Welcome to Python.org",
+        "Status Code": 200,
+        "Status": "Success",
+        "AI Summary": "",
+        "Sentiment": "",
+        "Keywords": ""
+    },
+    {
+        "Timestamp": "2026-09-13 21:25:40",
+        "URL": "https://httpbin.org/status/200",
+        "Title": "No Title Found",
+        "Status Code": 200,
+        "Status": "Success",
+        "AI Summary": "",
+        "Sentiment": "",
+        "Keywords": ""
+    }
+]

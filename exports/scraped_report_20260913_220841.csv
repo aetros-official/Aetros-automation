@@ -1,0 +1,4 @@
+Timestamp,URL,Title,Status Code,Status
+2026-09-13 21:25:32,https://en.wikipedia.org/wiki/Main_Page,"Wikipedia, the free encyclopedia",200,Success
+2026-09-13 21:25:37,https://www.python.org,Welcome to Python.org,200,Success
+2026-09-13 21:25:40,https://httpbin.org/status/200,No Title Found,200,Success
