@@ -26,3 +26,6 @@ class AetrosDatabase:
         cursor.execute("INSERT INTO scraped_data (url, content) VALUES (?, ?)", (url, content))
         conn.commit()
         conn.close()
+
+# Alias for compatibility with main.py
+aetrosBD = AetrosDatabase
