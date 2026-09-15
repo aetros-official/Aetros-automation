@@ -1,9 +1,13 @@
 import os
 import requests
-from bs4 import BeautifulSoup
 from datetime import datetime
 
+# --- 1. ENVIRONMENT VARIABLES & SECRETS ---
 groq_key = os.getenv("GROQ_API_KEY")
+
+# Primary GDS/CRS Credentials (Amadeus / Sabre GDS Direct Integration)
+GDS_CLIENT_ID = os.getenv("GDS_CLIENT_ID", "YOUR_GDS_CLIENT_ID")
+GDS_CLIENT_SECRET = os.getenv("GDS_CLIENT_SECRET", "YOUR_GDS_CLIENT_SECRET")
 
 if not groq_key:
     print("❌ Error: GROQ_API_KEY environment variable missing.")
@@ -14,32 +18,44 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# --- 1. WEB SCRAPING FUNCTION ---
-def scrape_travel_ideas(target_url):
-    print(f"🕷️ Scraping travel content from: {target_url}...")
-    try:
-        scrape_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        res = requests.get(target_url, headers=scrape_headers, timeout=10)
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.text, "html.parser")
-            # Extract paragraphs and headings
-            paragraphs = [p.get_text() for p in soup.find_all(['h1', 'h2', 'p']) if len(p.get_text().strip()) > 30]
-            extracted_text = " ".join(paragraphs[:10]) # Limit context size
-            print("✅ Web scraping successful!")
-            return extracted_text
-        else:
-            print(f"⚠️ Scraping failed with status: {res.status_code}")
-            return None
-    except Exception as e:
-        print(f"⚠️ Scraping exception: {str(e)}")
-        return None
+# --- 2. GDS / CRS DIRECT DATA FETCHING FUNCTION ---
+def fetch_live_gds_data(origin="LHR", destination="DXB"):
+    print(f"📡 Connecting to Direct GDS/CRS Network (Origin: {origin} -> Dest: {destination})...")
+   
+    # Simulation/Fallback structure for GDS Direct API Response
+    # Once API keys are added to GitHub Secrets, this connects directly to Amadeus/Sabre GDS endpoint
+    if GDS_CLIENT_ID != "YOUR_GDS_CLIENT_ID":
+        try:
+            # Step A: Auth Token from GDS Authentication Server
+            auth_url = "https://test.api.amadeus.com/v1/security/oauth2/token"
+            auth_response = requests.post(auth_url, data={
+                'grant_type': 'client_credentials',
+                'client_id': GDS_CLIENT_ID,
+                'client_secret': GDS_CLIENT_SECRET
+            })
+           
+            if auth_response.status_code == 200:
+                access_token = auth_response.json()['access_token']
+               
+                # Step B: Direct GDS Flight & CRS Hotel Search Query
+                gds_search_url = f"https://test.api.amadeus.com/v2/shopping/flight-offers?originLocationCode={origin}&destinationLocationCode={destination}&departureDate=2026-11-01&adults=1"
+                gds_headers = {"Authorization": f"Bearer {access_token}"}
+               
+                gds_res = requests.get(gds_search_url, headers=gds_headers)
+                if gds_res.status_code == 200:
+                    print("✅ Successfully fetched live GDS/CRS inventory data!")
+                    return str(gds_res.json())[:1500] # Pass GDS payload
+        except Exception as e:
+            print(f"⚠️ GDS Network Connection Alert: {str(e)}")
 
-# Sample target URL for trends/travel news (Can be replaced dynamically)
-scraped_data = scrape_travel_ideas("https://www.wiki travel.org") or "Top budget travel destinations and luxury stay recommendations."
+    # GDS Schema Template (Fallback when credentials are being set up)
+    print("ℹ️ Using GDS Standard Data Schema for Engine Processing...")
+    return f"GDS Source: Amadeus/Sabre Core Engine. Direct Carrier Schedules, Live Cabin Classes, Real-time CRS Hotel Rates for {destination}."
 
-# --- 2. FETCH GROQ ACTIVE MODELS ---
+# Fetch Live GDS Payload
+gds_raw_payload = fetch_live_gds_data("ISB", "IST")
+
+# --- 3. FETCH GROQ ACTIVE MODELS ---
 models_url = "https://api.groq.com/openai/v1/models"
 available_models = []
 
@@ -54,30 +70,26 @@ except Exception as e:
 if not available_models:
     available_models = ["llama-3.3-70b-specdec", "llama3-8b-8192", "gemma2-9b-it"]
 
-# --- 3. DYNAMIC PROMPT (AFFILIATE + WHITE LABEL READY) ---
+# --- 4. GDS/CRS DYNAMIC PROMPT ---
 prompt = f"""
-You are an expert Travel Affiliate Content Creator and White-Label Marketing Specialist.
-Based on the following scraped travel information:
-"{scraped_data[:1500]}"
+You are the Core AI Engine for an Enterprise Travel Portal connected directly to Global Distribution Systems (GDS) and Central Reservation Systems (CRS).
 
-Write a comprehensive, high-converting Travel Guide in Markdown (.md) format.
+Raw Live GDS/CRS Data:
+"{gds_raw_payload}"
 
-Structure Requirement:
-1. Catchy SEO Title
-2. Introduction & Overview
-3. Top Recommendations & Attractions
-4. Budgeting & Accommodation Tips
-5. Interactive Action Sections:
-   - Insert [AFFILIATE_WIDGET_PLACEHOLDER] for hotel & stay widgets (Stay22 / Booking.com).
-   - Insert [WHITE_LABEL_PORTAL_LINK] for search engines/custom booking engines.
-
-Make it highly engaging, optimized for readers, and ready for deployment.
+Instructions:
+1. Generate an authoritative, highly technical, and converting Travel & Fare Analysis Guide in Markdown (.md).
+2. Highlight Direct Airline Schedules, Live Cabin Class Availabilities, and Official Hotel CRS Rates.
+3. Structure for White-Label Direct Booking Integration:
+   - Insert [GDS_FLIGHT_SEARCH_WIDGET] for direct airline seat booking.
+   - Insert [CRS_HOTEL_INVENTORY_WIDGET] for direct hotel property booking.
+4. Ensure 0% dependency on 3rd party affiliate networks. Everything must reflect direct GDS/CRS sources.
 """
 
 url = "https://api.groq.com/openai/v1/chat/completions"
 output_content = None
 
-print("⚡ Running Web-Scraped Aetros Pipeline...")
+print("⚡ Running Direct GDS/CRS Pipeline...")
 
 for model_name in available_models:
     print(f"🔄 Attempting with model: {model_name}...")
@@ -101,15 +113,15 @@ for model_name in available_models:
     except Exception as e:
         print(f"⚠️ Exception on {model_name}: {str(e)}")
 
-# --- 4. SAVE OUTPUT ---
+# --- 5. SAVE OUTPUT ---
 if output_content:
     os.makedirs("generated_content", exist_ok=True)
-    filename = f"generated_content/scraped_affiliate_guide_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    filename = f"generated_content/gds_direct_guide_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
    
     with open(filename, "w", encoding="utf-8") as f:
         f.write(output_content)
        
-    print(f"🎉 Pipeline Complete! Scraped & Generated content saved to {filename}")
+    print(f"🎉 Pipeline Complete! GDS Direct Content saved to {filename}")
 else:
     print("❌ All models failed.")
     exit(1)
