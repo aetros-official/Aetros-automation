@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 
-class AetrosDatabase:
+class AetrosDB:
     def __init__(self, db_name="aetros.db"):
         self.db_name = db_name
         self.init_db()
@@ -27,5 +27,7 @@ class AetrosDatabase:
         conn.commit()
         conn.close()
 
-# Alias for compatibility with main.py
-aetrosBD = AetrosDatabase
+# اضافی ناموں سے مطابقت کے لیے (Compatibility Aliases)
+AetrosDatabase = AetrosDB
+aetrosBD = AetrosDB
+aetrosDB = AetrosDB
