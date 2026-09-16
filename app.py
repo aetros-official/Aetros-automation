@@ -46,42 +46,48 @@ st.markdown("""
         font-size: 0.85rem;
         font-weight: 600;
     }
-    /* Professional Footer Styling */
-    .footer-container {
+    /* Clean Footer Styling */
+    .footer-box {
         background-color: #F8FAFC;
         border-top: 1px solid #E2E8F0;
-        padding: 40px 20px 20px 20px;
-        margin-top: 50px;
+        padding: 30px 20px;
+        margin-top: 40px;
         color: #475569;
         font-size: 0.9rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
     }
-    .footer-col h4 {
+    .footer-column {
+        min-width: 160px;
+        margin-bottom: 15px;
+    }
+    .footer-column h4 {
         color: #1E3A8A;
         font-size: 1rem;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         font-weight: 700;
     }
-    .footer-col ul {
+    .footer-column ul {
         list-style-type: none;
         padding: 0;
         margin: 0;
     }
-    .footer-col ul li {
-        margin-bottom: 8px;
+    .footer-column ul li {
+        margin-bottom: 6px;
     }
-    .footer-col ul li a {
+    .footer-column ul li a {
         color: #64748B;
         text-decoration: none;
     }
-    .footer-col ul li a:hover {
+    .footer-column ul li a:hover {
         color: #3B82F6;
         text-decoration: underline;
     }
-    .footer-bottom {
+    .footer-end {
         text-align: center;
-        border-top: 1px solid #E2E8F0;
-        margin-top: 30px;
-        padding-top: 20px;
+        background-color: #F8FAFC;
+        padding-bottom: 20px;
         color: #94A3B8;
         font-size: 0.85rem;
     }
@@ -94,7 +100,7 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
 # ---------------------------------------------------------
-# SIDEBAR: AETROS BRANDED CONTROLS
+# SIDEBAR: AETROS BRANDED CONTROLS & GLOBAL PAYOUTS
 # ---------------------------------------------------------
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/airplane-take-off.png", width=65)
@@ -104,10 +110,31 @@ with st.sidebar:
     st.markdown("---")
    
     with st.expander("👑 Aetros Partner Program", expanded=True):
-        st.markdown("**Earn with Aetros** ($50 Min. Payout)")
+        st.markdown("**Earn with Aetros**")
         partner_id = st.text_input("Partner/Campaign ID", value="pin_campaign_01")
         st.code(f"https://aetros-automation.streamlit.app/?ref={partner_id}", language="text")
-        st.caption("Payout Options: PayPal, Payoneer, Wise, Crypto (USDT)")
+       
+        st.markdown("---")
+        st.markdown("### 💳 Global Payout Setup")
+        st.caption("Minimum Threshold: **$50.00**")
+       
+        payout_method = st.selectbox(
+            "Preferred Withdrawal Method",
+            ["PayPal (Global)", "Payoneer (Mastercard)", "Wise (Bank Transfer)", "Direct SWIFT Wire", "Crypto / USDT (Optional)"]
+        )
+       
+        if "PayPal" in payout_method:
+            st.text_input("PayPal Email Address", placeholder="name@example.com")
+        elif "Payoneer" in payout_method:
+            st.text_input("Payoneer Email / ID", placeholder="user@payoneer.com")
+        elif "Wise" in payout_method:
+            st.text_input("Wise Account Email / IBAN", placeholder="IBAN or Email")
+        elif "SWIFT" in payout_method:
+            st.text_input("Bank SWIFT / IBAN Details", placeholder="Account # & SWIFT code")
+        else:
+            st.text_input("USDT Wallet Address (TRC20)", placeholder="T... wallet address")
+           
+        st.info("ℹ️ Balances below $50 remain safely escrowed until threshold is reached.")
 
     with st.expander("🏷️ White Label Engine"):
         st.text_input("Portal Title", value="Aetros Global Travel & Mobility Hub")
@@ -185,66 +212,58 @@ with tab_ai:
         st.write(res.text)
 
 # ---------------------------------------------------------
-# PROFESSIONAL FOOTER SECTION (Booking.com Style)
+# PROFESSIONAL FOOTER SECTION (Booking.com Style Render)
 # ---------------------------------------------------------
-st.markdown("""
-<div class="footer-container">
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 1200px; margin: auto;">
-       
-        <div class="footer-col" style="flex: 1; min-width: 180px; margin-bottom: 20px;">
-            <h4>Support & Help</h4>
-            <ul>
-                <li><a href="#" target="_blank">Contact Customer Support</a></li>
-                <li><a href="#" target="_blank">Manage Your Bookings</a></li>
-                <li><a href="#" target="_blank">Safety & Security Center</a></li>
-                <li><a href="#" target="_blank">FAQ & Help Desk</a></li>
-            </ul>
-        </div>
-       
-        <div class="footer-col" style="flex: 1; min-width: 180px; margin-bottom: 20px;">
-            <h4>Discover Travel</h4>
-            <ul>
-                <li><a href="#" target="_blank">Global Flight Finder</a></li>
-                <li><a href="#" target="_blank">Luxury Resorts & Villas</a></li>
-                <li><a href="#" target="_blank">Airport Taxi Transfers</a></li>
-                <li><a href="#" target="_blank">Seasonal Travel Deals</a></li>
-            </ul>
-        </div>
-       
-        <div class="footer-col" style="flex: 1; min-width: 180px; margin-bottom: 20px;">
-            <h4>Terms & Policies</h4>
-            <ul>
-                <li><a href="#" target="_blank">Privacy Policy</a></li>
-                <li><a href="#" target="_blank">Terms & Conditions</a></li>
-                <li><a href="#" target="_blank">Refund & Cancellation</a></li>
-                <li><a href="#" target="_blank">Inactivity & Payout Rules</a></li>
-            </ul>
-        </div>
-       
-        <div class="footer-col" style="flex: 1; min-width: 180px; margin-bottom: 20px;">
-            <h4>Partner Network</h4>
-            <ul>
-                <li><a href="#" target="_blank">Aetros Partner Program</a></li>
-                <li><a href="#" target="_blank">Influencer Login</a></li>
-                <li><a href="#" target="_blank">White Label Integration</a></li>
-                <li><a href="#" target="_blank">Global Payout Options</a></li>
-            </ul>
-        </div>
-       
-        <div class="footer-col" style="flex: 1; min-width: 180px; margin-bottom: 20px;">
-            <h4>About Aetros</h4>
-            <ul>
-                <li><a href="#" target="_blank">How Aetros Works</a></li>
-                <li><a href="#" target="_blank">Global Mobility Hub</a></li>
-                <li><a href="#" target="_blank">Careers & Press</a></li>
-                <li><a href="#" target="_blank">Corporate Partnership</a></li>
-            </ul>
-        </div>
-       
+footer_html = """
+<div class="footer-box">
+    <div class="footer-column">
+        <h4>Support & Help</h4>
+        <ul>
+            <li><a href="#">Contact Customer Support</a></li>
+            <li><a href="#">Manage Your Bookings</a></li>
+            <li><a href="#">Safety & Security</a></li>
+            <li><a href="#">FAQ & Help Desk</a></li>
+        </ul>
     </div>
-   
-    <div class="footer-bottom">
-        <p>© 2026 Aetros Global Travel & Mobility Hub. All rights reserved. Powered by Autonomous Travel Tech.</p>
+    <div class="footer-column">
+        <h4>Discover Travel</h4>
+        <ul>
+            <li><a href="#">Global Flight Finder</a></li>
+            <li><a href="#">Luxury Resorts & Villas</a></li>
+            <li><a href="#">Airport Taxi Transfers</a></li>
+            <li><a href="#">Seasonal Deals</a></li>
+        </ul>
+    </div>
+    <div class="footer-column">
+        <h4>Terms & Policies</h4>
+        <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms & Conditions</a></li>
+            <li><a href="#">Refund & Cancellation</a></li>
+            <li><a href="#">Payout & Inactivity Rules</a></li>
+        </ul>
+    </div>
+    <div class="footer-column">
+        <h4>Partner Network</h4>
+        <ul>
+            <li><a href="#">Aetros Partner Program</a></li>
+            <li><a href="#">Influencer Login</a></li>
+            <li><a href="#">White Label Integration</a></li>
+            <li><a href="#">Global Payout Options</a></li>
+        </ul>
+    </div>
+    <div class="footer-column">
+        <h4>About Aetros</h4>
+        <ul>
+            <li><a href="#">How Aetros Works</a></li>
+            <li><a href="#">Global Mobility Hub</a></li>
+            <li><a href="#">Careers & Press</a></li>
+            <li><a href="#">Corporate Partnership</a></li>
+        </ul>
     </div>
 </div>
-""", unsafe_allow_html=True)
+<div class="footer-end">
+    <p>© 2026 Aetros Global Travel & Mobility Hub. All rights reserved. Powered by Autonomous Travel Tech.</p>
+</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
