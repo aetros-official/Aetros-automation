@@ -12,39 +12,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling for Ultra Premium UI & Footer
+# Custom Styling for Ultra Premium Booking.com & Agoda Style UI
 st.markdown("""
     <style>
-    .main-header {
-        font-size: 2.3rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #1E3A8A, #3B82F6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
+    .top-navbar {
+        background: linear-gradient(135deg, #003580, #0071c2);
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 25px;
     }
-    .card-box {
-        background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    .top-navbar h1 {
+        color: white;
+        font-size: 1.8rem;
+        margin: 0;
+        font-weight: 800;
+    }
+    .main-header {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #1A365D;
+        text-align: center;
         margin-bottom: 20px;
     }
-    .price-tag {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: #059669;
-        float: right;
-    }
-    .badge-tag {
-        background-color: #EFF6FF;
-        color: #1D4ED8;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
+    .search-container {
+        background-color: #FFB700;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
     }
     /* Clean Footer Styling */
     .footer-box {
@@ -63,7 +62,7 @@ st.markdown("""
         margin-bottom: 15px;
     }
     .footer-column h4 {
-        color: #1E3A8A;
+        color: #003580;
         font-size: 1rem;
         margin-bottom: 10px;
         font-weight: 700;
@@ -81,7 +80,7 @@ st.markdown("""
         text-decoration: none;
     }
     .footer-column ul li a:hover {
-        color: #3B82F6;
+        color: #0071c2;
         text-decoration: underline;
     }
     .footer-end {
@@ -148,9 +147,21 @@ with st.sidebar:
     c2.metric("Commissions", "$850")
 
 # ---------------------------------------------------------
-# MAIN DASHBOARD CONTENT
+# LUXURIOUS TOP HEADER (Booking.com / Agoda Style)
 # ---------------------------------------------------------
-st.markdown('<div class="main-header">🌍 Aetros Global Travel & Mobility Hub</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="top-navbar">
+    <div>
+        <h1>🌍 Aetros</h1>
+        <span style="font-size: 0.85rem; color: #E2E8F0;">Global Travel & Mobility Hub</span>
+    </div>
+    <div>
+        <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+            💱 Currency: USD ($) | 🌐 Global Reach
+        </span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 POPULAR_AIRPORTS = {
     "Dubai International, UAE (DXB)": "DXB",
@@ -212,7 +223,7 @@ with tab_ai:
         st.write(res.text)
 
 # ---------------------------------------------------------
-# PROFESSIONAL FOOTER SECTION (Booking.com Style Render)
+# PROFESSIONAL FOOTER SECTION
 # ---------------------------------------------------------
 footer_html = """
 <div class="footer-box">
