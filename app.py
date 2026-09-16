@@ -57,7 +57,7 @@ GDS_CLIENT_ID = st.secrets.get("GDS_CLIENT_ID", "")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Global Top Hubs Quick Search (Fallback / Fast Select)
+# Global Top Hubs Quick Search
 POPULAR_AIRPORTS = {
     "Dubai International, UAE (DXB)": "DXB",
     "London Heathrow, UK (LHR)": "LHR",
@@ -72,6 +72,33 @@ POPULAR_AIRPORTS = {
     "Lahore Allama Iqbal Intl, Pakistan (LHE)": "LHE",
     "Islamabad Intl, Pakistan (ISB)": "ISB"
 }
+
+# Country & City Database for Hotels
+GLOBAL_HOTEL_LOCATIONS = {
+    "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ras Al Khaimah"],
+    "Saudi Arabia": ["Makkah", "Madinah", "Jeddah", "Riyadh", "Al Ula"],
+    "United Kingdom": ["London", "Manchester", "Edinburgh", "Birmingham"],
+    "United States": ["New York", "Los Angeles", "Miami", "Chicago", "Las Vegas"],
+    "Turkey": ["Istanbul", "Antalya", "Cappadocia", "Bodrum"],
+    "Thailand": ["Bangkok", "Phuket", "Pattaya", "Chiang Mai"],
+    "Pakistan": ["Hunza Valley", "Skardu", "Islamabad", "Lahore", "Karachi"],
+    "Switzerland": ["Zurich", "Geneva", "Interlaken", "Lucerne"],
+    "Maldives": ["Male", "Maafushi", "Baa Atoll"]
+}
+
+# Popular Taxi Locations / Hubs
+POPULAR_TAXI_HUBS = [
+    "Dubai International Airport (DXB)",
+    "Downtown Dubai / Burj Khalifa Area",
+    "Jeddah Airport (JED) to Makkah Hotels",
+    "London Heathrow Airport (LHR)",
+    "Central London / Oxford Street",
+    "Istanbul Airport (IST) to Sultanahmet",
+    "New York JFK Airport to Manhattan",
+    "Islamabad Airport (ISB) to Blue Area",
+    "Lahore Airport (LHE) to Gulberg",
+    "Other Custom Address (Type Below)"
+]
 
 # Tabs UI Structure
 tab_flight, tab_hotel, tab_ride, tab_ai = st.tabs([
@@ -89,17 +116,17 @@ with tab_flight:
    
     col_f1, col_f2, col_f3 = st.columns(3)
     with col_f1:
-        origin_type = st.radio("Origin Input Type", ["Quick Airport List", "Type Any Airport / City Worldwide"], key="ori_t")
-        if origin_type == "Quick Airport List":
+        origin_type = st.radio("Origin Selection Mode", ["Dropdown List", "Type Any Airport / City"], key="ori_t")
+        if origin_type == "Dropdown List":
             origin_display = st.selectbox("From (Departure)", list(POPULAR_AIRPORTS.keys()))
             origin_code = POPULAR_AIRPORTS[origin_display]
         else:
-            custom_ori = st.text_input("Enter Airport Name / City / Code", placeholder="e.g. Tokyo Haneda or HND")
+            custom_ori = st.text_input("Enter Airport / City Code", placeholder="e.g. Tokyo Haneda or HND")
             origin_code = custom_ori if custom_ori else "DXB"
            
     with col_f2:
-        dest_type = st.radio("Destination Input Type", ["Quick Airport List", "Type Any Airport / City Worldwide"], key="dest_t")
-        if dest_type == "Quick Airport List":
+        dest_type = st.radio("Destination Selection Mode", ["Dropdown List", "Type Any Airport / City"], key="dest_t")
+        if dest_type == "Dropdown List":
             dest_display = st.selectbox("To (Arrival)", list(POPULAR_AIRPORTS.keys()), index=1)
             destination_code = POPULAR_AIRPORTS[dest_display]
         else:
@@ -111,13 +138,9 @@ with tab_flight:
         cabin_class = st.selectbox("Class", ["Economy", "Premium Economy", "Business", "First Class"])
 
     if st.button("Search All Global Flights 🔍", type="primary"):
-        if not GDS_CLIENT_ID:
-            st.info("💡 Note: Displaying Global GDS Flight Search Results (Duffel API direct hook active).")
-       
         with st.spinner("Connecting to 300+ Airlines worldwide..."):
             st.success(f"Live Flights Found for route: **{origin_code} ➔ {destination_code}**")
            
-            # Fast Simulated UI Engine for Instant Response
             sample_flights = [
                 {"airline": "Emirates / Partner", "code": origin_code, "dest": destination_code, "price": "$480", "type": "Direct Non-Stop"},
                 {"airline": "Qatar Airways", "code": origin_code, "dest": destination_code, "price": "$450", "type": "1 Stop (Doha)"},
@@ -145,33 +168,46 @@ with tab_flight:
                                 st.warning("Please complete the required details.")
 
 # ---------------------------------------------------------
-# TAB 2: HOTELS, RESORTS & VILLAS (ANY STREET / CITY / COUNTRY)
+# TAB 2: HOTELS, RESORTS & VILLAS (SEARCHABLE DROPDOWN + CUSTOM SEARCH BAR)
 # ---------------------------------------------------------
 with tab_hotel:
-    st.markdown("### 🏨 Worldwide Accommodations (Hotels, Resorts, Villas, Apartments)")
+    st.markdown("### 🏨 Worldwide Accommodations (Hotels, Resorts, Villas)")
    
-    col_h1, col_h2, col_h3 = st.columns([2, 1, 1])
+    col_h1, col_h2, col_h3 = st.columns(3)
    
     with col_h1:
-        location_query = st.text_input(
-            "Enter Any Destination (Country, City, Region, or Street Address)",
-            placeholder="e.g. Marina District Dubai, Oxford Street London, Hunza Valley, or Downtown Tokyo"
-        )
+        c_options = list(GLOBAL_HOTEL_LOCATIONS.keys()) + ["Other Country (Type in Search Bar Below)"]
+        selected_country = st.selectbox("1. Select/Search Country 🔍", c_options)
+
     with col_h2:
-        prop_type = st.selectbox("Property Type", ["All Types", "5-Star Luxury Resort", "Boutique Hotel", "Private Villa / Apartment", "Budget Stay"])
+        if selected_country == "Other Country (Type in Search Bar Below)":
+            selected_city = "Custom Location"
+            target_city = st.text_input("2. Enter Custom City / Region / Street", placeholder="e.g. Zurich, Switzerland or Oxford Street")
+        else:
+            cities_list = GLOBAL_HOTEL_LOCATIONS[selected_country] + ["Other City/Street (Type Below)"]
+            selected_city = st.selectbox("2. Select/Search City 🔍", cities_list)
+            if selected_city == "Other City/Street (Type Below)":
+                target_city = st.text_input("Enter Specific City / Street Search", placeholder="e.g. Marina District")
+            else:
+                target_city = f"{selected_city}, {selected_country}"
+
     with col_h3:
-        guests_count = st.number_input("Guests / Rooms", min_value=1, max_value=20, value=2)
+        prop_type = st.selectbox("Property Type", ["All Accommodation Types", "5-Star Luxury Resort", "Boutique Hotel", "Private Villa / Apartment", "Budget Stay"])
+
+    # Extra Direct Search Bar for Instant Custom Query
+    manual_hotel_search = st.text_input("🔍 Direct Search Bar (Type Any Specific Hotel, Resort or Exact Address directly):", placeholder="e.g. Burj Al Arab Dubai, Atlantis The Palm, or 5th Avenue New York")
 
     if st.button("Search Accommodations 🔎", type="primary"):
-        target_loc = location_query if location_query else "Global Top Destination"
+        # If user typed in the direct search bar, prioritize that
+        final_search_loc = manual_hotel_search if manual_hotel_search else (target_city if target_city else "Selected Destination")
        
-        with st.spinner(f"Scanning Hotels, Resorts & Villas in '{target_loc}'..."):
-            st.markdown(f"#### Available Stays in: `{target_loc}`")
+        with st.spinner(f"Scanning Hotels & Resorts for '{final_search_loc}'..."):
+            st.markdown(f"#### Top Stays Found for: `{final_search_loc}`")
            
             stays = [
-                {"name": f"Grand Palace Resort & Spa ({target_loc})", "type": "5-Star Luxury Resort", "price": "$220/night", "rating": "⭐⭐⭐⭐⭐ (4.9)"},
-                {"name": f"The Horizon Executive Suites ({target_loc})", "type": "Luxury Apartment / Villa", "price": "$160/night", "rating": "⭐⭐⭐⭐ (4.7)"},
-                {"name": f"Central City Boutique Hotel ({target_loc})", "type": "Boutique Hotel", "price": "$95/night", "rating": "⭐⭐⭐⭐ (4.5)"}
+                {"name": f"Grand Resort & Spa ({final_search_loc})", "type": "5-Star Luxury Resort", "price": "$220/night", "rating": "⭐⭐⭐⭐⭐ (4.9)"},
+                {"name": f"Horizon Executive Suites ({final_search_loc})", "type": "Luxury Apartment / Villa", "price": "$160/night", "rating": "⭐⭐⭐⭐ (4.7)"},
+                {"name": f"Central City Hotel ({final_search_loc})", "type": "Boutique Hotel", "price": "$95/night", "rating": "⭐⭐⭐⭐ (4.5)"}
             ]
            
             for s_idx, stay in enumerate(stays):
@@ -187,7 +223,7 @@ with tab_hotel:
                     with st.form(f"hotel_form_{s_idx}"):
                         g_name = st.text_input("Guest Name")
                         g_phone = st.text_input("Mobile / WhatsApp Number")
-                        checkin = st.date_input(f"Check-in Date ({s_idx})")
+                        checkin = st.date_input("Check-in Date", key=f"dt_{s_idx}")
                         if st.form_submit_button("Confirm Instant Reservation 🏨"):
                             if g_name and g_phone:
                                 st.success(f"Reservation Successful for {g_name}! Confirmation voucher sent to {g_phone}.")
@@ -195,7 +231,7 @@ with tab_hotel:
                                 st.warning("Please fill in contact info.")
 
 # ---------------------------------------------------------
-# TAB 3: TAXI, CAR RENTAL & AIRPORT TRANSFERS
+# TAB 3: TAXI, CAR RENTAL & AIRPORT TRANSFERS (SEARCHABLE DROPDOWN + CUSTOM SEARCH BAR)
 # ---------------------------------------------------------
 with tab_ride:
     st.markdown("### 🚕 Global Taxi, Airport Transfers & Luxury Car Rentals")
@@ -203,20 +239,26 @@ with tab_ride:
     col_r1, col_r2, col_r3 = st.columns(3)
    
     with col_r1:
-        pickup = st.text_input("Pick-up Location (Airport, Hotel, Street)", placeholder="e.g. DXB Airport Terminal 3")
+        pu_choice = st.selectbox("1. Pick-up Location (Select/Search) 🔍", POPULAR_TAXI_HUBS)
+        pu_manual = st.text_input("OR Type Exact Pick-up Address / Street:", placeholder="e.g. Hotel Front Desk / Street Name", key="pu_m")
+        pickup = pu_manual if pu_manual else (pu_choice if pu_choice != "Other Custom Address (Type Below)" else "")
+           
     with col_r2:
-        dropoff = st.text_input("Drop-off Location (Destination / Hotel)", placeholder="e.g. Atlantis The Palm, Dubai")
-    with col_r3:
-        ride_type = st.selectbox("Vehicle Class", ["Standard Sedan / Taxi", "Executive Luxury SUV", "Airport Shuttle Bus", "Private Chauffeur"])
+        do_choice = st.selectbox("2. Drop-off Location (Select/Search) 🔍", POPULAR_TAXI_HUBS, index=1)
+        do_manual = st.text_input("OR Type Exact Drop-off Address / Street:", placeholder="e.g. Airport Terminal 3 / Specific Villa", key="do_m")
+        dropoff = do_manual if do_manual else (do_choice if do_choice != "Other Custom Address (Type Below)" else "")
 
-    if st.button("Find Rides & Transfers 🚗"):
+    with col_r3:
+        ride_type = st.selectbox("Vehicle Class", ["Standard Sedan / Taxi", "Executive Luxury SUV", "Airport Shuttle Bus", "Private Chauffeur VIP"])
+
+    if st.button("Find Rides & Transfers 🚗", type="primary"):
         if not pickup or not dropoff:
-            st.warning("Please specify both Pick-up and Drop-off locations.")
+            st.warning("Please specify both Pick-up and Drop-off locations (either select from list or type below).")
         else:
             with st.spinner("Finding available drivers and vehicles..."):
                 rides = [
                     {"type": ride_type, "provider": "Aetros Express Transfer", "eta": "5-10 mins", "price": "$35"},
-                    {"type": "Premium VIP Chauffeur", "provider": "Global Black Car Service", "eta": "Scheduled", "price": "$75"}
+                    {"type": "Premium VIP Chauffeur", "provider": "Global Black Car Service", "eta": "Scheduled Pick-up", "price": "$75"}
                 ]
                
                 for r_idx, ride in enumerate(rides):
@@ -224,7 +266,7 @@ with tab_ride:
                     <div class="card-box">
                         <span class="price-tag">{ride['price']}</span>
                         <h3>🚗 {ride['provider']} ({ride['type']})</h3>
-                        <p><b>From:</b> {pickup} ➔ <b>To:</b> {dropoff} | <b>Pickup Status:</b> {ride['eta']}</p>
+                        <p><b>From:</b> {pickup} <br><b>To:</b> {dropoff} <br><b>Pickup Status:</b> {ride['eta']}</p>
                     </div>
                     """, unsafe_allow_html=True)
                    
@@ -233,7 +275,10 @@ with tab_ride:
                             r_name = st.text_input("Passenger Name")
                             r_contact = st.text_input("Phone Number for Driver SMS")
                             if st.form_submit_button("Confirm Ride Booking 🚕"):
-                                st.success(f"Ride confirmed for {r_name}! Driver will contact via {r_contact}.")
+                                if r_name and r_contact:
+                                    st.success(f"Ride confirmed for {r_name}! Driver will contact via {r_contact}.")
+                                else:
+                                    st.warning("Please enter your name and phone number.")
 
 # ---------------------------------------------------------
 # TAB 4: AI TRAVEL ASSISTANT
