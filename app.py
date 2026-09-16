@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Styling
+# Custom Styling (Fixed Param)
 st.markdown("""
     <style>
     .main-header {
@@ -28,7 +28,7 @@ st.markdown("""
         margin-bottom: 15px;
     }
     </style>
-""", unsafe_allow_allow_html=True)
+""", unsafe_allow_html=True)
 
 st.markdown('<div class="main-header">✈️ Aetros Travel & Content Automation Portal</div>', unsafe_allow_html=True)
 
