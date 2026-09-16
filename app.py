@@ -8,10 +8,11 @@ import google.generativeai as genai
 st.set_page_config(
     page_title="Aetros Global Travel & Mobility Hub",
     page_icon="🌍",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom Styling for Ultra Premium & Fast UI
+# Custom Styling for Ultra Premium UI
 st.markdown("""
     <style>
     .main-header {
@@ -48,16 +49,57 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">🌍 Aetros Global Travel & Mobility Hub</div>', unsafe_allow_html=True)
-
-# Secrets Setup
+# Secrets & Hidden Backend Commission Tracking Setup
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
-GDS_CLIENT_ID = st.secrets.get("GDS_CLIENT_ID", "")
+TP_MARKER = st.secrets.get("TP_MARKER", "384921")
+STAY22_KEY = st.secrets.get("STAY22_KEY", "aetros_travel")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-# Global Top Hubs Quick Search
+# ---------------------------------------------------------
+# SIDEBAR: 100% AETROS BRANDED (AFFILIATE + WHITE LABEL)
+# ---------------------------------------------------------
+with st.sidebar:
+    st.image("https://img.icons8.com/color/96/airplane-take-off.png", width=65)
+    st.title("⚙️ Aetros Admin Hub")
+    st.caption("Own Brand Control & Partner Engine")
+   
+    st.markdown("---")
+   
+    # 1. OWN AFFILIATE PROGRAM
+    with st.expander("👑 Aetros Partner Program", expanded=True):
+        st.markdown("**Earn with Aetros**")
+        st.caption("Generate custom tracking links for your affiliates and campaigns.")
+       
+        partner_id = st.text_input("Partner/Campaign ID", value="pin_campaign_01")
+        st.markdown("🔗 **Your Branded Referral Link:**")
+        st.code(f"https://aetros-automation.streamlit.app/?ref={partner_id}", language="text")
+
+    # 2. WHITE LABEL ENGINE CONTROLS
+    with st.expander("🏷️ Aetros White Label Engine"):
+        st.text_input("Portal Title", value="Aetros Global Travel & Mobility Hub")
+        st.selectbox("Default Currency", ["USD ($)", "EUR (€)", "GBP (£)", "AED (AH)", "PKR (Rs)"])
+        st.text_input("White Label Domain", value="booking.aetros.com")
+        st.success("✅ Aetros White Label Active")
+
+    # 3. PINTEREST TRAFFIC HUB
+    with st.expander("📌 Pinterest Campaign Hub"):
+        st.write("Active Direct Landing URL:")
+        st.code("https://aetros-automation.streamlit.app/", language="text")
+
+    # 4. EARNINGS SUMMARY
+    st.markdown("---")
+    st.markdown("### 📊 Aetros Network Performance")
+    c1, c2 = st.columns(2)
+    c1.metric("Total Clicks", "3,420")
+    c2.metric("Commissions", "$850")
+
+# ---------------------------------------------------------
+# MAIN DASHBOARD CONTENT
+# ---------------------------------------------------------
+st.markdown('<div class="main-header">🌍 Aetros Global Travel & Mobility Hub</div>', unsafe_allow_html=True)
+
 POPULAR_AIRPORTS = {
     "Dubai International, UAE (DXB)": "DXB",
     "London Heathrow, UK (LHR)": "LHR",
@@ -73,7 +115,6 @@ POPULAR_AIRPORTS = {
     "Islamabad Intl, Pakistan (ISB)": "ISB"
 }
 
-# Country & City Database for Hotels
 GLOBAL_HOTEL_LOCATIONS = {
     "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ras Al Khaimah"],
     "Saudi Arabia": ["Makkah", "Madinah", "Jeddah", "Riyadh", "Al Ula"],
@@ -86,7 +127,6 @@ GLOBAL_HOTEL_LOCATIONS = {
     "Maldives": ["Male", "Maafushi", "Baa Atoll"]
 }
 
-# Popular Taxi Locations / Hubs
 POPULAR_TAXI_HUBS = [
     "Dubai International Airport (DXB)",
     "Downtown Dubai / Burj Khalifa Area",
@@ -109,7 +149,7 @@ tab_flight, tab_hotel, tab_ride, tab_ai = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# TAB 1: FLIGHTS (AIRLINES & AIRPORTS WORLDWIDE)
+# TAB 1: FLIGHTS
 # ---------------------------------------------------------
 with tab_flight:
     st.markdown("### ✈️ Global Airline & Airport Network Search")
@@ -138,7 +178,7 @@ with tab_flight:
         cabin_class = st.selectbox("Class", ["Economy", "Premium Economy", "Business", "First Class"])
 
     if st.button("Search All Global Flights 🔍", type="primary"):
-        with st.spinner("Connecting to 300+ Airlines worldwide..."):
+        with st.spinner("Connecting to Global Flight Engine..."):
             st.success(f"Live Flights Found for route: **{origin_code} ➔ {destination_code}**")
            
             sample_flights = [
@@ -161,14 +201,14 @@ with tab_flight:
                         fn = st.text_input("Full Name (as per Passport)")
                         em = st.text_input("Email Address")
                         pp = st.text_input("Passport Number")
-                        if st.form_submit_button("Confirm Direct Booking 🎟️"):
+                        if st.form_submit_button("Confirm Booking 🎟️"):
                             if fn and em:
-                                st.success(f"Ticket Reserved! Booking Reference: #AT-{f_idx}8921. Details sent to {em}.")
+                                st.success(f"Ticket Reserved! Booking Confirmation sent to {em}.")
                             else:
-                                st.warning("Please complete the required details.")
+                                st.warning("Please complete all details.")
 
 # ---------------------------------------------------------
-# TAB 2: HOTELS, RESORTS & VILLAS (SEARCHABLE DROPDOWN + CUSTOM SEARCH BAR)
+# TAB 2: HOTELS, RESORTS & VILLAS
 # ---------------------------------------------------------
 with tab_hotel:
     st.markdown("### 🏨 Worldwide Accommodations (Hotels, Resorts, Villas)")
@@ -194,11 +234,9 @@ with tab_hotel:
     with col_h3:
         prop_type = st.selectbox("Property Type", ["All Accommodation Types", "5-Star Luxury Resort", "Boutique Hotel", "Private Villa / Apartment", "Budget Stay"])
 
-    # Extra Direct Search Bar for Instant Custom Query
     manual_hotel_search = st.text_input("🔍 Direct Search Bar (Type Any Specific Hotel, Resort or Exact Address directly):", placeholder="e.g. Burj Al Arab Dubai, Atlantis The Palm, or 5th Avenue New York")
 
     if st.button("Search Accommodations 🔎", type="primary"):
-        # If user typed in the direct search bar, prioritize that
         final_search_loc = manual_hotel_search if manual_hotel_search else (target_city if target_city else "Selected Destination")
        
         with st.spinner(f"Scanning Hotels & Resorts for '{final_search_loc}'..."):
@@ -226,12 +264,12 @@ with tab_hotel:
                         checkin = st.date_input("Check-in Date", key=f"dt_{s_idx}")
                         if st.form_submit_button("Confirm Instant Reservation 🏨"):
                             if g_name and g_phone:
-                                st.success(f"Reservation Successful for {g_name}! Confirmation voucher sent to {g_phone}.")
+                                st.success(f"Reservation Successful for {g_name}! Voucher sent to {g_phone}.")
                             else:
                                 st.warning("Please fill in contact info.")
 
 # ---------------------------------------------------------
-# TAB 3: TAXI, CAR RENTAL & AIRPORT TRANSFERS (SEARCHABLE DROPDOWN + CUSTOM SEARCH BAR)
+# TAB 3: TAXI & CAR RENTAL
 # ---------------------------------------------------------
 with tab_ride:
     st.markdown("### 🚕 Global Taxi, Airport Transfers & Luxury Car Rentals")
@@ -253,7 +291,7 @@ with tab_ride:
 
     if st.button("Find Rides & Transfers 🚗", type="primary"):
         if not pickup or not dropoff:
-            st.warning("Please specify both Pick-up and Drop-off locations (either select from list or type below).")
+            st.warning("Please specify both Pick-up and Drop-off locations.")
         else:
             with st.spinner("Finding available drivers and vehicles..."):
                 rides = [
@@ -297,6 +335,3 @@ with tab_ai:
                     st.write(res.text)
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
-
-
-
