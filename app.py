@@ -2,21 +2,23 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
+import requests
+import os
 from core.local_db import LocalDBConnector
 from main import full_aetros_workflow
 from modules.ai_processor import AIProcessorModule
 
-st.set_page_config(page_title="Aetros Automation Dashboard", page_icon="🚀", layout="wide")
+st.set_page_config(page_title="Aetros Automation Dashboard", page_icon="✈️", layout="wide")
 
-st.title("🚀 Aetros Automation Platform")
-st.markdown("Live Analytics & AI Content Management Dashboard")
+st.title("Aetros Automation Platform")
+st.markdown("Live Analytics, AI Content & Live GDS Flight Search Dashboard")
 
 # Initialize AI Engine
 ai_engine = AIProcessorModule()
 
 # Sidebar Controls
-st.sidebar.header("🕹️ Controls")
-if st.sidebar.button("▶️ Run Instant Scraper Pipeline"):
+st.sidebar.header("Controls")
+if st.sidebar.button("Run Instant Scraper Pipeline"):
     with st.spinner("Executing Full Automation Workflow..."):
         full_aetros_workflow()
     st.sidebar.success("Pipeline executed successfully!")
@@ -29,12 +31,13 @@ db = LocalDBConnector()
 conn = db.get_connection()
 
 # Navigation Tabs
-tab1, tab2 = st.tabs(["📊 Analytics & Data", "✍️ AI Content Writing Agent"])
+tab1, tab2, tab3 = st.tabs(["Analytics & Data", "AI Content Writing Agent", "✈️ Live GDS Flights Search"])
 
 try:
     df = pd.read_sql_query("SELECT * FROM scraped_backup ORDER BY id DESC", conn)
     conn.close()
 
+    # TAB 1: Analytics & Data
     with tab1:
         if not df.empty:
             m1, m2, m3 = st.columns(3)
@@ -46,28 +49,28 @@ try:
 
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader("📊 Sentiment Analysis Distribution")
+                st.subheader("Sentiment Analysis Distribution")
                 sentiment_counts = df['sentiment'].value_counts().reset_index()
                 sentiment_counts.columns = ['Sentiment', 'Count']
                 fig1 = px.pie(sentiment_counts, names='Sentiment', values='Count', hole=0.4)
                 st.plotly_chart(fig1, use_container_width=True)
 
             with col2:
-                st.subheader("🌐 Status Code Breakdown")
+                st.subheader("Status Code Breakdown")
                 status_counts = df['status_code'].value_counts().reset_index()
                 status_counts.columns = ['Status Code', 'Count']
                 fig2 = px.bar(status_counts, x='Status Code', y='Count', text='Count', color='Status Code')
                 st.plotly_chart(fig2, use_container_width=True)
 
             st.divider()
-            st.subheader("📋 Scraped Records & AI Summaries")
+            st.subheader("Scraped Records & AI Summaries")
             st.dataframe(df[['timestamp', 'url', 'title', 'sentiment', 'ai_summary', 'keywords']], use_container_width=True)
         else:
             st.warning("No data found in local database. Run the pipeline first!")
 
     # TAB 2: AI Content Writing Agent
     with tab2:
-        st.subheader("🤖 AI Content Rewriter & Optimizer")
+        st.subheader("AI Content Rewriter & Optimizer")
         st.write("Select any scraped content from your database and let the AI rewrite or optimize it.")
 
         if not df.empty:
@@ -78,7 +81,7 @@ try:
 
             goal = st.selectbox("Select Rewrite Goal:", ["blog", "seo", "social", "summary"], format_func=lambda x: x.upper())
 
-            if st.button("✨ Improve Content with AI"):
+            if st.button("Improve Content with AI"):
                 with st.spinner("AI Agent is re-writing content..."):
                     enhanced_text = ai_engine.rewrite_and_improve_content(selected_row['title'], goal=goal)
                     st.success("Transformation Complete!")
@@ -88,3 +91,58 @@ try:
 
 except Exception as e:
     st.error(f"Error loading database records: {str(e)}")
+
+# TAB 3: Live GDS Flights Search (Duffel API)
+with tab3:
+    st.subheader("✈️ Search Live Flights (Duffel GDS Integration)")
+    st.write("Real-time airline fares, schedules, and direct booking offers")
+
+    DUFFEL_API_KEY = os.getenv("GDS_CLIENT_ID")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        origin = st.text_input("Origin (Departure Airport Code)", value="LHR")
+    with col2:
+        destination = st.text_input("Destination (Arrival Airport Code)", value="DXB")
+    with col3:
+        departure_date = st.date_input("Departure Date")
+
+    if st.button("Search Flights"):
+        if not DUFFEL_API_KEY:
+            st.error("API Key missing! Please verify GDS_CLIENT_ID in GitHub Secrets.")
+        else:
+            st.info("Fetching live flight offers...")
+            headers = {
+                "Accept": "application/json",
+                "Authorization": f"Bearer {DUFFEL_API_KEY}",
+                "Duffel-Version": "v2"
+            }
+            payload = {
+                "data": {
+                    "slices": [
+                        {
+                            "origin": origin,
+                            "destination": destination,
+                            "departure_date": str(departure_date)
+                        }
+                    ],
+                    "passengers": [{"type": "adult"}],
+                    "cabin_class": "economy"
+                }
+            }
+            try:
+                response = requests.post("https://api.duffel.com/air/offer_requests", json=payload, headers=headers)
+                if response.status_code in [200, 201]:
+                    offers = response.json().get("data", {}).get("offers", [])
+                    st.success(f"{len(offers)} live flight offers found!")
+                    for offer in offers[:5]:
+                        total_amount = offer.get("total_amount")
+                        currency = offer.get("total_currency")
+                        owner_name = offer.get("owner", {}).get("name", "Airline")
+                        st.subheader(f"✈️ {owner_name} - {total_amount} {currency}")
+                        st.write(f"Offer ID: {offer.get('id')}")
+                        st.markdown("---")
+                else:
+                    st.error("Failed to fetch flight data. Check airport codes and date format.")
+            except Exception as ex:
+                st.error(f"Connection error: {str(ex)}")
