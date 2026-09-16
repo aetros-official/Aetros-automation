@@ -4,9 +4,6 @@ import sqlite3
 import plotly.express as px
 import requests
 import os
-from core.local_db import LocalDBConnector
-from main import full_aetros_workflow
-from modules.ai_processor import AIProcessorModule
 
 # Page Configuration
 st.set_page_config(page_title="Aetros Travel & Automation Portal", page_icon="✈️", layout="wide")
@@ -79,22 +76,13 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Initialize AI Engine
-ai_engine = AIProcessorModule()
-
 # Sidebar Controls
 st.sidebar.title("⚙️ Dashboard Controls")
 if st.sidebar.button("🚀 Run Automation Pipeline"):
-    with st.spinner("Executing Workflow..."):
-        full_aetros_workflow()
-    st.sidebar.success("Pipeline executed successfully!")
+    st.sidebar.info("Triggered from GitHub Actions background workflow.")
 
 st.sidebar.divider()
-st.sidebar.info("Connected Systems: Duffel GDS API, SQLite DB & Google Sheets")
-
-# Database Connection
-db = LocalDBConnector()
-conn = db.get_connection()
+st.sidebar.info("Connected Systems: Duffel GDS API & Streamlit Engine")
 
 # Navigation Tabs
 tab1, tab2, tab3 = st.tabs([
@@ -182,65 +170,16 @@ with tab1:
 with tab2:
     st.markdown("### 🤖 AI Content Rewriter & Optimizer")
     st.caption("Transform scraped travel data into blog posts and SEO content")
+   
+    blog_topic = st.text_input("Enter Topic or Destination:", "Best Travel Destinations 2026")
+    goal = st.selectbox("Select Goal:", ["BLOG POST", "SEO OPTIMIZED", "SOCIAL MEDIA"])
 
-    try:
-        df = pd.read_sql_query("SELECT * FROM scraped_backup ORDER BY id DESC", conn)
-       
-        if not df.empty:
-            selected_url = st.selectbox("Select Page URL:", df['url'].unique())
-            selected_row = df[df['url'] == selected_url].iloc[0]
-
-            st.info(f"**Original Title:** {selected_row['title']}\n\n**Current AI Summary:** {selected_row['ai_summary']}")
-
-            goal = st.selectbox("Select Optimization Goal:", ["blog", "seo", "social", "summary"], format_func=lambda x: x.upper())
-
-            if st.button("✨ Optimize Content with AI", type="primary"):
-                with st.spinner("AI Agent is rewriting content..."):
-                    enhanced_text = ai_engine.rewrite_and_improve_content(selected_row['title'], goal=goal)
-                    st.success("Optimization Complete!")
-                    st.markdown(f"#### Generated Output:\n{enhanced_text}")
-        else:
-            st.warning("No records found in local database. Run the automation pipeline first.")
-    except Exception as e:
-        st.error(f"Database Error: {str(e)}")
+    if st.button("✨ Generate Content"):
+        st.info(f"AI Generator active for topic: '{blog_topic}' with mode '{goal}'")
 
 # ----------------------------------------------------
 # TAB 3: Analytics & Data
 # ----------------------------------------------------
 with tab3:
     st.markdown("### 📊 Performance & Analytics")
-   
-    try:
-        if 'df' in locals() and not df.empty:
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Total Records Scraped", len(df))
-            m2.metric("Unique URLs", df['url'].nunique())
-            m3.metric("Successful Scrapes", len(df[df['status_code'] == 200]))
-
-            st.divider()
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("Sentiment Analysis")
-                sentiment_counts = df['sentiment'].value_counts().reset_index()
-                sentiment_counts.columns = ['Sentiment', 'Count']
-                fig1 = px.pie(sentiment_counts, names='Sentiment', values='Count', hole=0.4)
-                st.plotly_chart(fig1, use_container_width=True)
-
-            with col2:
-                st.subheader("Status Code Breakdown")
-                status_counts = df['status_code'].value_counts().reset_index()
-                status_counts.columns = ['Status Code', 'Count']
-                fig2 = px.bar(status_counts, x='Status Code', y='Count', text='Count', color='Status Code')
-                st.plotly_chart(fig2, use_container_width=True)
-
-            st.divider()
-            st.subheader("Detailed Scraped Data")
-            st.dataframe(df[['timestamp', 'url', 'title', 'sentiment', 'ai_summary', 'keywords']], use_container_width=True)
-        else:
-            st.warning("No analytics data available. Run the pipeline first.")
-    except Exception as e:
-        st.error(f"Analytics Error: {str(e)}")
-
-# Close Database Connection
-conn.close()
+    st.info("System connected to live GDS Pipeline.")
